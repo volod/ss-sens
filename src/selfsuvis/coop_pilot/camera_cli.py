@@ -1,14 +1,10 @@
-#!/usr/bin/env python3
-"""Add a camera to Frigate config dynamically.
-
-Adds a camera definition to config/coop/frigate/config.yml and optionally restarts
-the Frigate container. Supports RTSP and USB (V4L2) cameras.
+"""Manage Frigate camera configuration from the coop_pilot package.
 
 Usage:
-  python scripts/add_camera.py --name front_door --rtsp rtsp://user:pass@192.168.1.100:554/stream1
-  python scripts/add_camera.py --name usb_cam --usb /dev/video0
-  python scripts/add_camera.py --name usb_cam --usb /dev/video0 --restart
-  python scripts/add_camera.py --list   # List configured cameras
+  ./scripts/coop-camera.sh --name front_door --rtsp rtsp://user:pass@192.168.1.100:554/stream1
+  ./scripts/coop-camera.sh --name usb_cam --usb /dev/video0
+  ./scripts/coop-camera.sh --name usb_cam --usb /dev/video0 --restart
+  ./scripts/coop-camera.sh --list
 """
 
 from __future__ import annotations
@@ -18,12 +14,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 FRIGATE_CONFIG = ROOT / "config" / "coop" / "frigate" / "config.yml"
 
 
 def load_config() -> dict:
-    """Load Frigate config as dict."""
+    """Load Frigate config as a dict."""
     try:
         import yaml
     except ImportError:
@@ -43,6 +39,7 @@ def save_config(config: dict) -> None:
     try:
         import yaml
     except ImportError:
+        print("ERROR: PyYAML required. Run: pip install pyyaml", file=sys.stderr)
         sys.exit(1)
 
     with open(FRIGATE_CONFIG, "w", encoding="utf-8") as f:
@@ -66,10 +63,8 @@ def list_cameras(config: dict) -> None:
 
 
 def add_rtsp_camera(config: dict, name: str, path: str, width: int, height: int, fps: int) -> None:
-    """Add RTSP camera config."""
-    if "cameras" not in config:
-        config["cameras"] = {}
-
+    """Add an RTSP camera config."""
+    config.setdefault("cameras", {})
     config["cameras"][name] = {
         "enabled": True,
         "ffmpeg": {
@@ -96,10 +91,8 @@ def add_usb_camera(
     height: int,
     fps: int,
 ) -> None:
-    """Add USB (V4L2) camera config."""
-    if "cameras" not in config:
-        config["cameras"] = {}
-
+    """Add a USB (V4L2) camera config."""
+    config.setdefault("cameras", {})
     config["cameras"][name] = {
         "enabled": True,
         "ffmpeg": {
@@ -121,16 +114,17 @@ def add_usb_camera(
 
 def restart_frigate() -> bool:
     """Restart Frigate container. Returns True on success."""
+    compose_script = ROOT / "scripts" / "coop-compose.sh"
     try:
         subprocess.run(
-            ["docker", "compose", "restart", "frigate"],
+            [str(compose_script), "restart", "frigate"],
             cwd=ROOT,
             check=True,
             capture_output=True,
         )
         return True
-    except subprocess.CalledProcessError as e:
-        print(f"WARNING: Restart failed: {e}", file=sys.stderr)
+    except subprocess.CalledProcessError as exc:
+        print(f"WARNING: Restart failed: {exc}", file=sys.stderr)
         return False
 
 
@@ -154,7 +148,6 @@ def main() -> None:
     parser.add_argument("--restart", action="store_true", help="Restart Frigate after adding")
 
     args = parser.parse_args()
-
     config = load_config()
 
     if args.list:
@@ -187,7 +180,7 @@ def main() -> None:
         if restart_frigate():
             print("OK: Frigate restarted")
         else:
-            print("Run manually: docker compose restart frigate")
+            print("Run manually: ./scripts/coop-compose.sh restart frigate")
 
 
 if __name__ == "__main__":
