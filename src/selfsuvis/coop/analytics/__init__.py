@@ -21,7 +21,7 @@ __all__ = [
     "MosquittoLogParser",
     "OpenRemoteLogParser",
     # Heavy (docker dep) — import directly from submodules:
-    # from selfsuvis.coop_pilot.analytics.collector import LogCollector
-    # from selfsuvis.coop_pilot.analytics.analyzer import LogAnalyzer
-    # from selfsuvis.coop_pilot.analytics.reporter import ReportRenderer
+    # from selfsuvis.coop.analytics.collector import LogCollector
+    # from selfsuvis.coop.analytics.analyzer import LogAnalyzer
+    # from selfsuvis.coop.analytics.reporter import ReportRenderer
 ]
