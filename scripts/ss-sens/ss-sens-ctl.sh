@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# Control the coop-pilot IoT edge stack.
+# Works from the project repo (dev) and as /usr/local/bin/ss-sens-ctl (symlink).
+#
+# Usage:
+#   ss-sens-ctl <command> [args]
+#
+# Commands:
+#   start            Start all services (reads COOP_COMPOSE_PROFILES from .env)
+#   stop             Stop all services
+#   restart          Stop then start all services
+#   status           Container status + live resource usage snapshot
+#   logs [service]   Stream logs (optional: filter to one service)
+#   ps               List containers
+#   shell <service>  Open interactive shell inside a container
+#   update           Pull latest images and recreate changed containers
+#   config           Show resolved docker-compose configuration
+#   env              Print active .env path and key settings
+#
+# Environment:
+#   SS_SENS_INSTALL_DIR   Override the install directory (set by systemd unit)
+
+set -euo pipefail
+
+# ── Locate real script dir (follow symlink) ───────────────────────────────────
+_SELF="$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null \
+        || realpath "${BASH_SOURCE[0]}" 2>/dev/null \
+        || echo "${BASH_SOURCE[0]}")"
+_SCRIPTS_DIR="$(cd "$(dirname "$_SELF")" && pwd)"
+
+# SS_SENS_INSTALL_DIR override (useful for multi-install or systemd ExecStart env)
+if [[ -n "${SS_SENS_INSTALL_DIR:-}" ]]; then
+  _SCRIPTS_DIR="${SS_SENS_INSTALL_DIR}/scripts/ss-sens"
+fi
+
+# shellcheck source=scripts/shared/common.sh
+source "$_SCRIPTS_DIR/../shared/common.sh"
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+log()  { printf '[ss-sens-ctl] %s\n' "$*"; }
+die()  { printf '[ss-sens-ctl] ERROR: %s\n' "$*" >&2; exit 1; }
+
+_require_env() {
+  [[ -f "$(project_env_file)" ]] \
+    || die ".env not found at $(project_env_file). Run ss-sens-bootstrap.sh first."
+}
+
+# ── Compose profile auto-detection ───────────────────────────────────────────
+# Read COOP_COMPOSE_PROFILES from .env and export as COMPOSE_PROFILES.
+# Falls back to COOP_METRICS_ENABLED for installs predating the bundle config.
+_apply_compose_profiles() {
+  _CTL_EF="$(project_env_file)"
+  if [[ ! -f "$_CTL_EF" ]]; then return; fi
+  _CTL_PROFILES="$(grep -E '^COOP_COMPOSE_PROFILES=' "$_CTL_EF" \
+                   | cut -d= -f2 | tr -d '[:space:]' || true)"
+  if [[ -n "$_CTL_PROFILES" ]]; then
+    export COMPOSE_PROFILES="$_CTL_PROFILES"
+    return
+  fi
+  # Backward compat: legacy flag written by older installs
+  _CTL_METRICS="$(grep -E '^COOP_METRICS_ENABLED=' "$_CTL_EF" \
+                  | cut -d= -f2 | tr -d '[:space:]' || true)"
+  if [[ "$_CTL_METRICS" == "true" ]]; then
+    export COMPOSE_PROFILES=metrics
+  fi
+}
+
+# ── Compose wrapper (no exec -- retains process control for multi-step cmds) ──
+_compose() {
+  docker compose \
+    --project-directory "$PROJECT_ROOT_DIR" \
+    --env-file "$PROJECT_ENV_FILE" \
+    -f "$PROJECT_SS_SENS_COMPOSE_FILE" \
+    "$@"
+}
+
+_frigate_wanted() {
+  case ",${COMPOSE_PROFILES:-}," in
+    *,video,*|*,frigate,*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+_frigate_compose() {
+  local data_dir
+  data_dir="$(project_data_dir)"
+  UID="$(id -u)" GID="$(id -g)" DATA_DIR="$data_dir" docker compose \
+    -f "$PROJECT_ROOT_DIR/docker/core/docker-compose.yml" \
+    --profile frigate \
+    "$@"
+}
+
+# ── Dispatch ──────────────────────────────────────────────────────────────────
+CMD="${1:-}"
+shift || true
+
+case "$CMD" in
+
+  start)
+    _require_env
+    _apply_compose_profiles
+    log "Starting coop stack..."
+    _compose up -d "$@"
+    if _frigate_wanted; then
+      log "Starting Frigate (docker/core profile frigate)..."
+      _frigate_compose up -d frigate
+    fi
+    log "Stack running. Use 'ss-sens-ctl status' or 'ss-sens-ctl logs'."
+    ;;
+
+  stop)
+    _apply_compose_profiles
+    log "Stopping coop stack..."
+    if _frigate_wanted; then
+      _frigate_compose stop frigate >/dev/null 2>&1 || true
+    fi
+    _compose down "$@"
+    ;;
+
+  restart)
+    _require_env
+    _apply_compose_profiles
+    log "Restarting coop stack..."
+    if _frigate_wanted; then
+      _frigate_compose stop frigate >/dev/null 2>&1 || true
+    fi
+    _compose down
+    _compose up -d "$@"
+    if _frigate_wanted; then
+      _frigate_compose up -d frigate
+    fi
+    log "Stack restarted."
+    ;;
+
+  status)
+    _apply_compose_profiles
+    _compose ps
+    printf '\n'
+    # shellcheck disable=SC2046  # word splitting on ps -q output is intentional
+    docker stats --no-stream \
+      --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}" \
+      $(_compose ps -q 2>/dev/null) 2>/dev/null || true
+    ;;
+
+  logs)
+    _apply_compose_profiles
+    _compose logs -f --tail=100 "$@"
+    ;;
+
+  ps)
+    _apply_compose_profiles
+    _compose ps "$@"
+    ;;
+
+  shell)
+    [[ -n "${1:-}" ]] || die "Usage: ss-sens-ctl shell <service>"
+    _apply_compose_profiles
+    _compose exec "$1" /bin/sh
+    ;;
+
+  update)
+    _require_env
+    _apply_compose_profiles
+    log "Pulling latest images..."
+    _compose pull
+    log "Recreating changed containers..."
+    _compose up -d --remove-orphans
+    log "Update complete."
+    ;;
+
+  config)
+    _apply_compose_profiles
+    _compose config "$@"
+    ;;
+
+  env)
+    _CTL_ENV_FILE="$(project_env_file)"
+    log "Active env: $_CTL_ENV_FILE"
+    [[ -f "$_CTL_ENV_FILE" ]] || die "Env file not found: $_CTL_ENV_FILE"
+    # Show all non-secret lines; mask passwords and secrets
+    grep -v -E '(PASSWORD|SECRET|TOKEN)=' "$_CTL_ENV_FILE" || true
+    printf '\n'
+    log "(Secrets masked. Use: sudo cat $_CTL_ENV_FILE)"
+    ;;
+
+  help|-h|--help)
+    sed -n '2,21p' "$_SELF"
+    exit 0
+    ;;
+
+  "")
+    sed -n '2,21p' "$_SELF"
+    exit 1
+    ;;
+
+  *)
+    die "Unknown command: $CMD. Run 'ss-sens-ctl help' for usage."
+    ;;
+
+esac
