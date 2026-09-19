@@ -63,7 +63,9 @@ make ss-sens-up-edge    # COMPOSE_PROFILES=edge
 
 Stated resource budget (Raspberry Pi class, 4 GB RAM / 4 cores): compose
 ceilings sum to **1.75 CPU and 1664 MiB**. OS, Docker, and page cache use the
-rest of 4 GB. A 24-hour soak on real hardware is `sens-pi-soak`.
+rest of 4 GB. A 24-hour soak on real hardware is
+[`sens-pi-soak`](../plan.md#sens-pi-soak); that run uses a published image after
+the staging repository exports this tree.
 
 | Service | CPU ceiling | Memory ceiling |
 | --- | --- | --- |

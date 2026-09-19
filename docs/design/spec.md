@@ -23,8 +23,10 @@ ss-video.
 **Boundary.** No web UI for people on the Pi. No import of `selfsuvis` or `ssv_vdp`.
 
 **Evaluation.** Decoder unit tests, the arm64 footprint gate, and `make ci` are
-green. Valid negative result: a decoder that cannot express a vendor payload is
-listed and skipped.
+green. A 24-hour soak of the `edge` profile on a real Pi records CPU, memory, and
+restarts against a published image. Valid negative result: a decoder that cannot
+express a vendor payload is listed and skipped; if the stack exceeds a 4 GB Pi
+budget, the measured numbers set the minimum hardware (8 GB Pi 5 or nettop).
 
 ## Field device layer
 
@@ -210,8 +212,10 @@ the simulation path and record the delta.
 
 ## Staged work
 
-While ss-sens is staged inside the video monorepo, publish (`publish-ss-sens`)
-and the Pi soak (`sens-pi-soak`) stay in that repository's plan.
+While ss-sens is staged inside the video monorepo, repository publish
+(`publish-ss-sens`) stays in that repository's plan. The Pi edge soak
+(`sens-pi-soak`) is in this plan; its Human step starts the `edge` profile from
+a published image after that export.
 This specification's registry lists what this tree owns.
 
 ## Capability Registry
@@ -222,7 +226,7 @@ the implementation line.
 
 | # | Capability | Status | How it is evaluated | Implementation |
 | --- | --- | --- | --- | --- |
-| 1 | `sensor-mesh` | shipped | Decoder unit tests, arm64 footprint gate, and `make ci` | [Current implementation](../impl/current.md) |
+| 1 | `sensor-mesh` | shipped | Decoder unit tests, arm64 footprint gate, `make ci`, 24-hour Pi edge soak | [Current implementation](../impl/current.md) |
 | 2 | `device-management` | planned | Registry, provisioning idempotence, downlink, and agent fixture tests | -- |
 | 3 | `first-party-firmware` | planned | Golden frames in C, Python, JS; env builds; privacy encoding test | -- |
 | 4 | `cross-stack-ci` | planned | `make ci` on full and toolchain-less checkouts; bundle contents | -- |
