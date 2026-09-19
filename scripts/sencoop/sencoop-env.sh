@@ -28,7 +28,7 @@ for arg in "$@"; do
   esac
 done
 
-TEMPLATE="$PROJECT_ROOT_DIR/src/selfsuvis/coop/env/${ENV}.env"
+TEMPLATE="$PROJECT_ROOT_DIR/src/sencoop/env/${ENV}.env"
 OUTPUT="$(project_env_file)"
 
 if [[ ! -f "$TEMPLATE" ]]; then

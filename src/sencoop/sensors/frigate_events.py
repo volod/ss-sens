@@ -77,7 +77,10 @@ class FrigateEventConsumer:
             except (TypeError, ValueError, OSError):
                 pass
 
-        region = after.get("region") or {}
+        # Only the mapping form is decoded; a box list or other shape yields an empty region.
+        region = after.get("region")
+        if not isinstance(region, dict):
+            region = {}
 
         return CameraEvent(
             event_id=after.get("id", ""),

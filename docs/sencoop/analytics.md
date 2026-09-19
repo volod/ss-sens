@@ -191,6 +191,7 @@ Create parsers for additional log formats:
 ```python
 from coop_stack_analytics.parsers import BaseLogParser, LogEntry
 
+
 class MyServiceParser(BaseLogParser):
     def parse_line(self, line: str) -> LogEntry:
         # Parse your log format
@@ -199,7 +200,7 @@ class MyServiceParser(BaseLogParser):
             level="INFO",
             message=parsed_message,
             raw=line,
-            metadata={"custom": "data"}
+            metadata={"custom": "data"},
         )
 ```
 
@@ -254,15 +255,17 @@ from coop_stack_analytics import LogCollector
 collector = LogCollector()
 
 # Define metrics
-container_restarts = Gauge('stack_container_restarts', 'Container restart count', ['service'])
-container_memory = Gauge('stack_container_memory_bytes', 'Container memory usage', ['service'])
+container_restarts = Gauge("stack_container_restarts", "Container restart count", ["service"])
+container_memory = Gauge("stack_container_memory_bytes", "Container memory usage", ["service"])
+
 
 def update_metrics():
     for service, stats in collector.get_all_container_stats().items():
-        container_memory.labels(service=service).set(stats['memory_usage_mb'] * 1024 * 1024)
+        container_memory.labels(service=service).set(stats["memory_usage_mb"] * 1024 * 1024)
 
     for service, health in collector.get_container_health().items():
-        container_restarts.labels(service=service).set(health['restart_count'])
+        container_restarts.labels(service=service).set(health["restart_count"])
+
 
 # Start metrics server on port 8000
 start_http_server(8000)

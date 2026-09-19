@@ -97,8 +97,9 @@ class SoundAnalyzer:
 
         recorded_at = datetime.now(timezone.utc)
         rms = float(np.sqrt(np.mean(audio.astype(np.float64) ** 2)))
-        rms_db = 20.0 * np.log10(max(rms, 1e-6)) - 90.0  # rough dBFS
-        silence = rms_db < -45.0
+        # Plain Python scalars: numpy ones do not serialize to JSON.
+        rms_db = float(20.0 * np.log10(max(rms, 1e-6)) - 90.0)  # rough dBFS
+        silence = bool(rms_db < -45.0)
 
         acoustic_events: list[dict[str, Any]] = []
         if not silence:

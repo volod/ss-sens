@@ -104,10 +104,10 @@ class SceneSynthesizer:
             async with self._db_pool.acquire() as conn:
                 rows = await conn.fetch(
                     """
-                    SELECT mission_id, ts, caption, facts_json
+                    SELECT mission_id, created_at AS ts, caption, facts_json
                     FROM scene_timeline
-                    WHERE ts > now() - interval '5 minutes'
-                    ORDER BY ts DESC
+                    WHERE created_at > now() - interval '5 minutes'
+                    ORDER BY created_at DESC
                     LIMIT 20
                     """,
                 )

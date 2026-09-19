@@ -176,5 +176,5 @@ live human-readable dashboard without requiring any robot or drone.
 - [getting-started.md](getting-started.md) — first-time setup
 - [sensor-integration.md](sensor-integration.md) — adding new sensor types
 - [analytics.md](../reference/analytics.md) — log analytics CLI (`sencoop-analytics`)
-- [architecture.md](../reference/architecture.md) — coop component diagram
+- [architecture.md](../design/architecture.md) — coop component diagram
 - [testing.md](testing.md) — MQTT integration tests and load testing

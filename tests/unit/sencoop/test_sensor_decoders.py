@@ -75,3 +75,46 @@ def test_frigate_event_decode_handles_numeric_strings_and_bad_values() -> None:
     assert event.top_score == 0.0
     assert event.ended_at is not None
     assert event.region == {"x": 0.1, "width": 0.3}
+
+
+def test_frigate_event_decode_tolerates_a_non_mapping_region() -> None:
+    event = FrigateEventConsumer.decode(
+        {
+            "type": "update",
+            "after": {
+                "id": "event-2",
+                "camera": "yard",
+                "label": "car",
+                "score": 0.7,
+                "start_time": 1777622400.0,
+                "region": [264, 450, 667, 853],
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.region == {}
+
+
+def test_sound_analyzer_emits_plain_python_scalars() -> None:
+    import asyncio
+    import json
+
+    import numpy as np
+
+    from sencoop.sensors.sound_analyzer import SoundAnalyzer
+
+    observations = []
+
+    async def collect(observation) -> None:
+        observations.append(observation)
+
+    analyzer = SoundAnalyzer("entrance", "rtsp://frigate:8554/entrance", on_observation=collect)
+    analyzer._capture_audio_chunk = lambda: np.full(16_000, 1000, dtype=np.int16)
+    analyzer._transcribe = lambda _audio: None
+    asyncio.run(analyzer._process_chunk())
+
+    observation = observations[0]
+    assert type(observation.silence) is bool
+    assert type(observation.rms_db) is float
+    json.dumps({"silence": observation.silence, "rms_db": observation.rms_db})
