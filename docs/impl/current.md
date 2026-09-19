@@ -7,9 +7,8 @@ ChirpStack ingest, the sensor rolling window, GPS-proximity mesh fusion, and
 contract `SensorEvent` publishes. The video API does not import `ss_sens`.
 
 This tree is a complete repository root (Python >= 3.11, `uv.lock`, `[tool.ss-split]
-siblings = []`, ss-common git tag `v0.1.0`). While staged under the video
-monorepo, `make -C projects/ss-sens ci` and `make split-check P=ss-sens` are
-the gates. Field-device forward work lives in [plan.md](plan.md).
+siblings = []`, ss-common git tag `v0.1.0`). `make ci` is the gate. Field-device
+forward work lives in [plan.md](plan.md).
 
 | Need | Read |
 | --- | --- |

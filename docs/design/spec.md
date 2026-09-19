@@ -210,13 +210,11 @@ contract events to fusion-rt.
 a quiet series is not. Valid negative result: hardware results outside simulation tolerance keep
 the simulation path and record the delta.
 
-## Staged work
+## Related repositories
 
-While ss-sens is staged inside the video monorepo, repository publish
-(`publish-ss-sens`) stays in that repository's plan. The Pi edge soak
-(`sens-pi-soak`) is in this plan; its Human step starts the `edge` profile from
-a published image after that export.
-This specification's registry lists what this tree owns.
+This repository is [`volod/ss-sens`](https://github.com/volod/ss-sens). Video and fusion
+consume contract events over MQTT. The Pi edge soak (`sens-pi-soak`) is in this plan
+and uses a tagged image from this repository.
 
 ## Capability Registry
 
