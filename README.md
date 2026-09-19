@@ -11,8 +11,10 @@ ss-sens over MQTT.
 ## Quick start
 
 ```bash
-make ci                 # lint, spec-plan, unit tests
+make ci                 # lint, spec-plan, footprint, unit tests
 make ss-sens-up-min     # Mosquitto + ChirpStack + ss-sens serve
+make ss-sens-up-edge    # Pi profile (+ node-exporter)
+make image              # linux/arm64+amd64 CPU-only image, QEMU /site/sensors
 curl http://127.0.0.1:8081/health
 ```
 

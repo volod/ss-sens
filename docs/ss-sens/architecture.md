@@ -167,6 +167,12 @@ Web Browser → HTTPS:443 → Proxy → Manager → Keycloak (auth) → PostgreS
 
 ## Resource Allocation
 
+Per-service compose ceilings for the Pi `edge` profile (stated 4 GB / 4-core
+budget) are in [deployment.md](../impl/current/deployment.md). Nettop min/mid/high
+guidance is in `src/ss_sens/env/prod.env`. The table below is the older 8 GB
+nettop sketch (Manager / Frigate / OpenRemote); those JVM and NVR pieces are
+not in the ss-sens `edge` profile.
+
 ### Memory Budget (8GB system)
 
 | Component | Allocation |

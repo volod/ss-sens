@@ -11,9 +11,15 @@ siblings = []`, ss-common git tag `v0.1.0`). While staged under the video
 monorepo, `make -C projects/ss-sens ci` and `make split-check P=ss-sens` are
 the gates. Field-device forward work lives in [plan.md](plan.md).
 
+| Need | Read |
+| --- | --- |
+| Modules, contracts, operations | this page |
+| Arm64 slim image, footprint gate, Pi `edge` profile | [deployment.md](current/deployment.md) |
+
 **Gate.** `make ci` bootstraps the locked environment with every extra, then Ruff,
-doc-link and spec-plan checks, and `tests/unit`. Stack tests are `make test-stack`
-after `make ss-sens-up-min`.
+doc-link and spec-plan checks, the footprint gate, and `tests/unit`. Stack tests
+are `make test-stack` after `make ss-sens-up-min`. Multi-arch image + QEMU smoke
+is `make image` (not in `make ci`).
 
 Camera code lives on the video side. Combined camera + sensor snapshots, scene
 synthesis, and the threat feed stay on the production server. Everything is
@@ -68,18 +74,24 @@ summary for that ingest so delayed uplinks do not crash the subscriber.
 
 ## Edge stack containers
 
-Profiles: `lorawan`, `metrics` (Make targets `ss-sens-up`, `ss-sens-up-min`,
-`ss-sens-metrics-up`). Frigate stays in the video repository (`make frigate-up`).
-Both compose files use the Docker network `selfsuvis-net` so the video API can
-reach Mosquitto.
+Profiles: `lorawan`, `edge`, `metrics` (Make targets `ss-sens-up`,
+`ss-sens-up-min`, `ss-sens-up-edge`, `ss-sens-metrics-up`). Frigate stays in
+the video repository (`make frigate-up`). Both compose files use the Docker
+network `selfsuvis-net` so the video API can reach Mosquitto.
+
+The Pi profile is `edge`: Mosquitto, ChirpStack with gateway bridge, Postgres,
+Redis, ss-sens, and node-exporter, with per-service CPU and memory limits that
+sum to 1.75 CPU / 1664 MiB (stated 4 GB / 4-core budget). Details:
+[deployment.md](current/deployment.md).
 
 | Component | Container | Role |
 | --- | --- | --- |
-| ss-sens | `ss-sens` | FastAPI sensor mesh service |
+| ss-sens | `ss-sens` | FastAPI sensor mesh service (CPU-only image `ss-sens:local`) |
 | Mosquitto | `ss-sens-mosquitto` | Central MQTT bus; TLS on 8883; ACL user `ss-sens` |
 | ChirpStack v4 | `ss-sens-chirpstack` (+ `ss-sens-cs-gwbridge`, `ss-sens-cs-rest`, `ss-sens-cs-postgres`, `ss-sens-cs-redis`) | LoRaWAN network server (EU868) |
-| Frigate | `ssv-frigate` | NVR with detection; events -> `frigate/#` |
-| Prometheus / Grafana / cAdvisor | `mon-*` | Optional `metrics` profile |
+| node-exporter | `ss-sens-node-exporter` | Host metrics on profiles `edge` and `metrics` |
+| Frigate | `ssv-frigate` | NVR with detection; events -> `frigate/#` (video repository) |
+| Prometheus / Grafana / cAdvisor | `ss-sens-prometheus`, `ss-sens-grafana`, `ss-sens-cadvisor` | Optional `metrics` profile (stays until ss-control) |
 
 Bind-mount runtime data stays under `$DATA_DIR/coop/` (Mosquitto certs, Frigate
 live config). Compose joins `selfsuvis-net` so the API can reach `mosquitto`.
@@ -118,7 +130,9 @@ serialize to the fixtures through their producing code paths.
   repository's `tests/integration/test_ss_sens_decouple.py` (fixture uplink ->
   `/site/sensors` and API `/site/state` / `/site/threat`).
 - Sizing (pilot): 3-5 sites, 5-10 LoRaWAN devices, 2-6 cameras on one amd64 nettop
-  (8 GB / 4 cores budget in `docs/ss-sens/architecture.md`).
+  (8 GB / 4 cores budget in `docs/ss-sens/architecture.md`). Pi class hosts use
+  `make ss-sens-up-edge` (4 GB / 4 cores stated budget in
+  [deployment.md](current/deployment.md)).
 
 Full docs: `docs/ss-sens/` (getting-started, architecture, sensor-integration,
 integration, analytics, distribution, testing, troubleshooting).

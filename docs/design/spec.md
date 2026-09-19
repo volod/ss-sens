@@ -22,8 +22,9 @@ ss-video.
 
 **Boundary.** No web UI for people on the Pi. No import of `selfsuvis` or `ssv_vdp`.
 
-**Evaluation.** Decoder unit tests and `make ci` are green. Valid negative result: a decoder that
-cannot express a vendor payload is listed and skipped.
+**Evaluation.** Decoder unit tests, the arm64 footprint gate, and `make ci` are
+green. Valid negative result: a decoder that cannot express a vendor payload is
+listed and skipped.
 
 ## Field device layer
 
@@ -209,8 +210,8 @@ the simulation path and record the delta.
 
 ## Staged work
 
-While ss-sens is staged inside the video monorepo, arm64 slim packaging (`sens-arm64-slim`),
-publish (`publish-ss-sens`), and the Pi soak (`sens-pi-soak`) stay in that repository's plan.
+While ss-sens is staged inside the video monorepo, publish (`publish-ss-sens`)
+and the Pi soak (`sens-pi-soak`) stay in that repository's plan.
 This specification's registry lists what this tree owns.
 
 ## Capability Registry
@@ -221,7 +222,7 @@ the implementation line.
 
 | # | Capability | Status | How it is evaluated | Implementation |
 | --- | --- | --- | --- | --- |
-| 1 | `sensor-mesh` | shipped | Decoder unit tests and `make ci` | [Current implementation](../impl/current.md) |
+| 1 | `sensor-mesh` | shipped | Decoder unit tests, arm64 footprint gate, and `make ci` | [Current implementation](../impl/current.md) |
 | 2 | `device-management` | planned | Registry, provisioning idempotence, downlink, and agent fixture tests | -- |
 | 3 | `first-party-firmware` | planned | Golden frames in C, Python, JS; env builds; privacy encoding test | -- |
 | 4 | `cross-stack-ci` | planned | `make ci` on full and toolchain-less checkouts; bundle contents | -- |

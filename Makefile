@@ -17,10 +17,11 @@ export UV_CACHE_DIR ?= $(DATA_ROOT)/uv-cache
 .DEFAULT_GOAL := help
 
 .PHONY: help bootstrap venv lock format format-check lint test test-stack \
- docker-check ss-sens-up ss-sens-up-min ss-sens-up-video ss-sens-down \
- ss-sens-logs ss-sens-status ss-sens-metrics-up ss-sens-release \
+ docker-check ss-sens-up ss-sens-up-min ss-sens-up-edge ss-sens-up-video \
+ ss-sens-down ss-sens-logs ss-sens-status ss-sens-metrics-up ss-sens-release \
  ss-sens-release-min ss-sens-release-video ss-sens-release-metrics \
- lint-doc-links lint-spec-plan plan-status ci ci-github
+ ss-sens-release-edge image footprint lint-doc-links lint-spec-plan \
+ plan-status ci ci-github
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*## "; print "Usage: make \n"} /^[a-zA-Z0-9_.-]+:.*## / {printf "  %-24s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -68,11 +69,14 @@ ss-sens-up: docker-check ## Bootstrap + start LoRaWAN + MQTT + ss-sens serve
 ss-sens-up-min: docker-check ## Start min bundle (LoRaWAN + MQTT + ss-sens serve)
 	COMPOSE_PROFILES=lorawan "$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-bootstrap.sh" up -d
 
+ss-sens-up-edge: docker-check ## Start Pi edge profile (LoRaWAN + MQTT + ss-sens + node-exporter)
+	COMPOSE_PROFILES=edge "$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-bootstrap.sh" up -d
+
 ss-sens-up-video: docker-check ## Start MQTT + ss-sens serve (Frigate stays in ss-video)
 	COMPOSE_PROFILES= "$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-bootstrap.sh" up -d
 
 ss-sens-down: docker-check ## Stop the ss-sens stack
-	COMPOSE_PROFILES=lorawan,metrics "$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-compose.sh" down
+	COMPOSE_PROFILES=lorawan,edge,metrics "$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-compose.sh" down
 
 ss-sens-logs: docker-check ## Stream ss-sens stack logs
 	"$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-compose.sh" logs -f --tail=100
@@ -98,6 +102,16 @@ ss-sens-release-video: ## Build MQTT-only bundle (no LoRaWAN; Frigate stays in s
 ss-sens-release-metrics: ## Build standard bundle plus Prometheus/Grafana images
 	"$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-release.sh" --arch amd64 --bundle standard --with-metrics $(if $(VERSION),--version $(VERSION),) --yes
 
+ss-sens-release-edge: ## Build Pi edge bundle (LoRaWAN + node-exporter); ARCH=arm64 for Pi
+	"$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-release.sh" --arch $(or $(ARCH),arm64) --bundle edge $(if $(VERSION),--version $(VERSION),) --yes
+
+footprint: ## Fail if ML stacks enter the base install (aarch64, x86_64)
+	@$(ENV) "$(PY)" -m ss_sens.quality.footprint --pyproject "$(PROJECT_ROOT)/pyproject.toml" \
+		--out "$(DATA_ROOT)/footprint"
+
+image: docker-check ## Multi-arch ss-sens image, record sizes, QEMU /site/sensors
+	"$(PROJECT_ROOT)/scripts/ss-sens/ss-sens-image.sh" all
+
 lint-doc-links: ## Check that relative Markdown links and anchors resolve
 	@"$(PY)" -m ss_kit.quality.doc_links --root "$(PROJECT_ROOT)"
 
@@ -107,6 +121,6 @@ lint-spec-plan: ## Check capability registry, task structure, status, and orderi
 plan-status: ## Count tasks by lane/status and show the next eligible work
 	@"$(PY)" -m ss_kit.quality.plan_summary --root "$(PROJECT_ROOT)"
 
-ci: bootstrap lint lint-doc-links lint-spec-plan test ## Required local and GitHub CI gate
+ci: bootstrap lint lint-doc-links lint-spec-plan footprint test ## Required local and GitHub CI gate
 
 ci-github: ci ## Explicit GitHub Actions entrypoint

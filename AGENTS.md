@@ -26,6 +26,9 @@ link here and keep only integration-specific routing.
 - One distribution, `ss-sens`, with import package `src/ss_sens/`. Tests live under `tests/`.
 - Base dependencies are `aiomqtt`, `pydantic`, `httpx`, `uvicorn`, and `ss-common[mqtt,web]`.
   Analytics (`pandas`, `jinja2`, `rich`, `docker`) stay behind the `analytics` extra.
+  The footprint gate forbids torch, transformers, onnxruntime, ctranslate2, and streamlit
+  on `aarch64-unknown-linux-gnu` (and x86_64). The runtime image is CPU-only even when
+  built on a CUDA host.
 - `COOP_*` env vars and MQTT topic strings stay. Do not rename them in this repository.
 - Runtime data belongs under `$DATA_DIR` (default `.data/` in this project). Bind mounts for the
   compose stack live under `$DATA_DIR/coop/` (`COOP_*` layout). Never write a module-local
@@ -44,16 +47,20 @@ link here and keep only integration-specific routing.
 
 ## Usual commands
 
-- `make ci` — locked install, lint, doc-link and spec-plan checks, unit tests
+- `make ci` — locked install, lint, doc-link and spec-plan checks, footprint gate, unit tests
+- `make footprint` — resolve the base install for aarch64 and x86_64; fail on ML stacks
+- `make image` — multi-arch CPU-only image, recorded sizes, QEMU `/site/sensors`
 - `make ss-sens-up` / `make ss-sens-up-min` — bootstrap and start LoRaWAN + MQTT + `ss-sens serve`
+- `make ss-sens-up-edge` — Pi profile (LoRaWAN + MQTT + ss-sens + node-exporter)
 - `make ss-sens-down`, `make ss-sens-logs`, `make ss-sens-status`
 - `python -m ss_sens serve` — FastAPI on `COOP_HTTP_PORT` (8081)
 
 ## Tests and quality
 
 - Add or update tests with every behavior change.
-- `make ci` is the required gate. Stack tests (`make test-stack`) need Docker and
-  `make ss-sens-up-min`; they are not part of `make ci`.
+- `make ci` is the required gate (includes the arm64 footprint gate). Stack tests
+  (`make test-stack`) need Docker and `make ss-sens-up-min`; they are not part of
+  `make ci`. `make image` is the multi-arch / QEMU run; it is not part of `make ci`.
 - Fix findings at their source; do not weaken checks to fit new code.
 
 ## Documentation lifecycle

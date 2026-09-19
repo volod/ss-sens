@@ -1,27 +1,26 @@
 # docker-compose.ss-sens.yml
 #
-# Coop-pilot IoT edge services. Three bundle configurations supported:
-#
-#   min      -- MQTT hub + LoRaWAN (ChirpStack): sensor data, mechanical control
-#   standard -- min + Frigate NVR: adds video surveillance (default)
-#   video    -- MQTT hub + Frigate NVR: standalone video, no LoRaWAN
+# Coop-pilot IoT edge services.
 #
 # Activated via COMPOSE_PROFILES (comma-separated):
 #   lorawan  -- chirpstack-* services (postgres, redis, server, gateway-bridge, rest-api)
-#   metrics  -- prometheus, grafana, cAdvisor, node-exporter
+#   edge     -- Pi profile: lorawan services plus node-exporter (stated 4 GB / 4-core budget)
+#   metrics  -- prometheus, grafana, cAdvisor; node-exporter also on this profile
 #
 # mosquitto and the ss-sens FastAPI service always start.
 # Frigate lives in the video repository (docker/core profile `frigate`).
 #
 # Bundle -> profiles mapping:
 #   min       COMPOSE_PROFILES=lorawan
+#   edge      COMPOSE_PROFILES=edge
 #   standard  COMPOSE_PROFILES=lorawan  plus `make frigate-up`
 #   video     mosquitto + ss-sens, plus `make frigate-up`
 #   + metrics append ,metrics to any of the above
 #
 # Resource limits are parameterised via COOP_* variables in .data/.env.
-# Defaults target the minimum supported spec: 4-core CPU, 8 GB RAM.
-# See src/ss_sens/env/prod.env for mid / high profile guidance.
+# Edge defaults target a Raspberry Pi class host: 4-core CPU, 4 GB RAM
+# (compose ceilings sum to 1.75 CPU / 1664 MiB). Nettop min/mid/high
+# guidance is in src/ss_sens/env/prod.env.
 #
 # Usage (via scripts):
 #   ./scripts/ss-sens/ss-sens-bootstrap.sh      -- first run: .env, certs, users, start
@@ -32,6 +31,7 @@
 #   make ss-sens-up          (lorawan)
 #   make ss-sens-down
 #   make ss-sens-up-min      (lorawan)
+#   make ss-sens-up-edge     (edge: lorawan + node-exporter)
 #   make ss-sens-metrics-up  (lorawan + metrics)
 # Frigate stays in the video repository (`make frigate-up`).
 
@@ -82,6 +82,7 @@ services:
   # Subscribes to ChirpStack uplinks, serves /site/sensors and /site/mesh,
   # and publishes contract SensorEvent messages on ss/v1/... topics.
   ss-sens:
+    image: ${SS_SENS_IMAGE:-ss-sens:local}
     build:
       context: .
       dockerfile: docker/ss-sens/Dockerfile.ss-sens
@@ -135,6 +136,7 @@ services:
     restart: unless-stopped
     profiles:
       - lorawan
+      - edge
     environment:
       POSTGRES_USER: ${CHIRPSTACK_PG_USER:-chirpstack}
       POSTGRES_PASSWORD: ${CHIRPSTACK_PG_PASSWORD:-chirpstack}
@@ -167,6 +169,7 @@ services:
     restart: unless-stopped
     profiles:
       - lorawan
+      - edge
     command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
       - coop_chirpstack_redis_data:/data
@@ -196,6 +199,7 @@ services:
     restart: unless-stopped
     profiles:
       - lorawan
+      - edge
     command: --config /etc/chirpstack
     depends_on:
       chirpstack-postgres:
@@ -240,6 +244,7 @@ services:
     restart: unless-stopped
     profiles:
       - lorawan
+      - edge
     depends_on:
       mosquitto:
         condition: service_healthy
@@ -271,6 +276,7 @@ services:
     restart: unless-stopped
     profiles:
       - lorawan
+      - edge
     depends_on:
       - chirpstack
     ports:
@@ -391,6 +397,7 @@ services:
     container_name: ss-sens-node-exporter
     restart: unless-stopped
     profiles:
+      - edge
       - metrics
     network_mode: host
     pid: host

@@ -11,6 +11,7 @@
 #   --output-dir DIR       Output directory for the bundle (default: ./dist)
 #   --bundle BUNDLE        Service bundle to include (default: standard):
 #                            min      -- MQTT hub + LoRaWAN (ChirpStack)
+#                            edge     -- min + node-exporter (Pi profile)
 #                            standard -- same as min (Frigate stays in ss-video)
 #                            video    -- MQTT hub only (no LoRaWAN/ChirpStack)
 #   --with-metrics         Include Prometheus, Grafana, cAdvisor, node-exporter images
@@ -59,6 +60,11 @@ METRICS_IMAGES=(
   "prom/node-exporter:latest"
 )
 
+# Host metrics only (bundle: edge). Full metrics stack is --with-metrics.
+EDGE_IMAGES=(
+  "prom/node-exporter:latest"
+)
+
 # ── Scripts to bundle from scripts/ (paths relative to scripts/; structure preserved in bundle) ──
 BUNDLE_SCRIPTS=(
   shared/common.sh
@@ -102,8 +108,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$BUNDLE_CONFIG" == "min" || "$BUNDLE_CONFIG" == "standard" || "$BUNDLE_CONFIG" == "video" ]] \
-  || die "Invalid --bundle: $BUNDLE_CONFIG (use min, standard, or video)"
+[[ "$BUNDLE_CONFIG" == "min" || "$BUNDLE_CONFIG" == "edge" || "$BUNDLE_CONFIG" == "standard" || "$BUNDLE_CONFIG" == "video" ]] \
+  || die "Invalid --bundle: $BUNDLE_CONFIG (use min, edge, standard, or video)"
 
 [[ "$ARCH" == "amd64" || "$ARCH" == "arm64" ]] \
   || die "Unsupported arch: $ARCH (use amd64 or arm64)"
@@ -154,6 +160,7 @@ else
   ALL_IMAGES=("${BASE_IMAGES[@]}")
   case "$BUNDLE_CONFIG" in
     min)      ALL_IMAGES+=("${LORAWAN_IMAGES[@]}") ;;
+    edge)     ALL_IMAGES+=("${LORAWAN_IMAGES[@]}"); ALL_IMAGES+=("${EDGE_IMAGES[@]}") ;;
     standard) ALL_IMAGES+=("${LORAWAN_IMAGES[@]}"); ALL_IMAGES+=("${VIDEO_IMAGES[@]}") ;;
     video)    ALL_IMAGES+=("${VIDEO_IMAGES[@]}") ;;
   esac
@@ -172,6 +179,16 @@ else
     log "  save  $IMAGE -> images/$FNAME"
     docker save "$IMAGE" | gzip -9 > "$IMAGES_DIR/$FNAME"
   done
+
+  log "Building ss-sens service image for linux/${ARCH} (CPU-only)..."
+  if "$SCRIPT_DIR/ss-sens-image.sh" load "$ARCH"; then
+    TAG="ss-sens:local-${ARCH}"
+    FNAME="ss-sens_local_${ARCH}.tar.gz"
+    log "  save  $TAG -> images/$FNAME"
+    docker save "$TAG" | gzip -9 > "$IMAGES_DIR/$FNAME"
+  else
+    warn "ss-sens image build failed; the target will need to build from the Dockerfile."
+  fi
 fi
 
 # ── Docker Engine offline packages ────────────────────────────────────────────

@@ -9,7 +9,8 @@ they consume this service over MQTT.
 - Docker Engine 24.0+ with Compose V2
 - Linux amd64 or arm64
 - Python 3.11+ (Raspberry Pi OS Bookworm ships 3.11)
-- At least 8 GB RAM and 4 CPU cores for the LoRaWAN profile
+- At least 4 GB RAM and 4 CPU cores for the `edge` profile (Pi class).
+  8 GB / 4 cores for the LoRaWAN profile plus video on a nettop.
 
 ## Installation
 
@@ -83,6 +84,10 @@ users when missing:
 ```bash
 make ss-sens-up-min
 # equivalent: COMPOSE_PROFILES=lorawan ./scripts/ss-sens/ss-sens-bootstrap.sh up -d
+
+# Raspberry Pi class host (LoRaWAN + node-exporter, 4 GB budget):
+make ss-sens-up-edge
+# equivalent: COMPOSE_PROFILES=edge ./scripts/ss-sens/ss-sens-bootstrap.sh up -d
 ```
 
 PUID/PGID are set from the current user. For compose-only commands (logs,
@@ -104,7 +109,8 @@ curl http://127.0.0.1:8081/health
 
 Expected containers on the min / lorawan profile: `ss-sens`, `ss-sens-mosquitto`,
 `ss-sens-chirpstack`, `ss-sens-cs-gwbridge`, `ss-sens-cs-rest`,
-`ss-sens-cs-postgres`, `ss-sens-cs-redis`.
+`ss-sens-cs-postgres`, `ss-sens-cs-redis`. The `edge` profile adds
+`ss-sens-node-exporter`.
 
 ## Accessing services
 

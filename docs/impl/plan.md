@@ -5,7 +5,7 @@ Forward-only: this file describes work that remains. Available behavior belongs 
 [specification](../design/spec.md). Task fields, statuses, and ordering are defined in the
 [planning workflow](../guide/planning-workflow.md).
 
-While ss-sens is staged, arm64 packaging, publish, and the Pi soak live in the staging
+While ss-sens is staged, publish and the Pi soak live in the staging
 repository's plan. See [Staged work](../design/spec.md#staged-work).
 
 Path reading: `src/ss_sens/` is this package; routes placed under a v1 devices API attach to

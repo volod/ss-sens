@@ -93,6 +93,7 @@ Append `,metrics` to any bundle to add Prometheus, Grafana, cAdvisor, and node-e
 | Bundle             | COOP_COMPOSE_PROFILES         |
 |--------------------|-------------------------------|
 | min                | `lorawan`                     |
+| edge               | `edge`                        |
 | min + metrics      | `lorawan,metrics`             |
 | standard           | `lorawan,video`               |
 | standard + metrics | `lorawan,video,metrics`       |
@@ -150,7 +151,7 @@ All bundles land in `./dist/`.
 
   --version VERSION      Version tag (default: git describe --tags --always)
   --arch ARCH            amd64 or arm64 (default: amd64)
-  --bundle BUNDLE        min | standard | video (default: standard)
+  --bundle BUNDLE        min | edge | standard | video (default: standard)
   --with-metrics         Add Prometheus/Grafana/cAdvisor/node-exporter images
   --output-dir DIR       Output directory (default: ./dist)
   --no-images            Skip Docker image export (configs only, for testing)
@@ -158,10 +159,11 @@ All bundles land in `./dist/`.
   --yes                  Non-interactive
 ```
 
-Example: ARM64 standard bundle for a Raspberry Pi 4 site:
+Example: ARM64 edge bundle for a Raspberry Pi 4/5 site:
 
 ```bash
-./scripts/ss-sens/ss-sens-release.sh --version 1.3.0 --arch arm64 --bundle standard --yes
+make ss-sens-release-edge ARCH=arm64 VERSION=1.3.0
+# or: ./scripts/ss-sens/ss-sens-release.sh --version 1.3.0 --arch arm64 --bundle edge --yes
 ```
 
 ### Bundle contents
@@ -251,7 +253,7 @@ sudo ./install.sh [options]
   --data-dir DIR         Data storage root (default: /opt/ss-sens/data)
   --storage-dev DEV      Block device for data (formats ext4 with flash-friendly options)
                          Examples: /dev/sdb  /dev/mmcblk0  /dev/nvme0n1
-  --bundle BUNDLE        min | standard | video (default: standard)
+  --bundle BUNDLE        min | edge | standard | video (default: standard)
   --hw-profile PROFILE   Hardware resource profile:
                            min  -- 4-core, 8 GB RAM  (default)
                            mid  -- 4-8-core, 16 GB RAM

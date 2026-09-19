@@ -15,6 +15,7 @@
 #                          Examples: /dev/sdb  /dev/mmcblk0  /dev/nvme0n1
 #   --bundle BUNDLE        Service bundle to activate (default: standard):
 #                            min      -- MQTT hub + LoRaWAN (sensors, mechanical control)
+#                            edge     -- Pi profile: min + node-exporter (4 GB budget)
 #                            standard -- same as min (Frigate stays in ss-video)
 #                            video    -- MQTT hub only (no LoRaWAN/ChirpStack)
 #   --hw-profile PROFILE   Hardware resource profile for Docker limits (default: min):
@@ -91,8 +92,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$BUNDLE" == "min" || "$BUNDLE" == "standard" || "$BUNDLE" == "video" ]] \
-  || die "Invalid --bundle: $BUNDLE (use min, standard, or video)"
+[[ "$BUNDLE" == "min" || "$BUNDLE" == "edge" || "$BUNDLE" == "standard" || "$BUNDLE" == "video" ]] \
+  || die "Invalid --bundle: $BUNDLE (use min, edge, standard, or video)"
 
 [[ "$HW_PROFILE" == "min" || "$HW_PROFILE" == "mid" || "$HW_PROFILE" == "high" ]] \
   || die "Invalid --hw-profile: $HW_PROFILE (use min, mid, or high)"
@@ -384,8 +385,9 @@ esac
 # Map bundle + metrics flag -> COOP_COMPOSE_PROFILES (read by ss-sens-ctl on every start)
 case "$BUNDLE" in
   min)      _PROFILES="lorawan" ;;
-  standard) _PROFILES="lorawan,video" ;;
-  video)    _PROFILES="video" ;;
+  edge)     _PROFILES="edge" ;;
+  standard) _PROFILES="lorawan" ;;
+  video)    _PROFILES="" ;;
 esac
 [[ "$WITH_METRICS" == true ]] && _PROFILES="${_PROFILES},metrics"
 
