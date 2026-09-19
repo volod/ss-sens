@@ -11,7 +11,7 @@
 #   metrics  -- prometheus, grafana, cAdvisor, node-exporter
 #
 # mosquitto and the ss-sens FastAPI service always start.
-# Frigate lives in docker/core/docker-compose.yml under profile `frigate`.
+# Frigate lives in the video repository (docker/core profile `frigate`).
 #
 # Bundle -> profiles mapping:
 #   min       COMPOSE_PROFILES=lorawan
@@ -29,10 +29,11 @@
 #   ss-sens-ctl start                           -- installed stack (reads .env profiles)
 #
 # Or via Makefile:
-#   make ss-sens-up          (standard: lorawan + Frigate)
+#   make ss-sens-up          (lorawan)
 #   make ss-sens-down
-#   make ss-sens-up-min      (lorawan only)
-#   make ss-sens-metrics-up  (standard + metrics)
+#   make ss-sens-up-min      (lorawan)
+#   make ss-sens-metrics-up  (lorawan + metrics)
+# Frigate stays in the video repository (`make frigate-up`).
 
 networks:
   default:

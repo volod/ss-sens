@@ -10,9 +10,9 @@
 #   --arch ARCH            Target CPU architecture: amd64 or arm64 (default: amd64)
 #   --output-dir DIR       Output directory for the bundle (default: ./dist)
 #   --bundle BUNDLE        Service bundle to include (default: standard):
-#                            min      -- MQTT hub + LoRaWAN (ChirpStack only, no video)
-#                            standard -- min + Frigate NVR video surveillance
-#                            video    -- MQTT hub + Frigate NVR (no LoRaWAN/ChirpStack)
+#                            min      -- MQTT hub + LoRaWAN (ChirpStack)
+#                            standard -- same as min (Frigate stays in ss-video)
+#                            video    -- MQTT hub only (no LoRaWAN/ChirpStack)
 #   --with-metrics         Include Prometheus, Grafana, cAdvisor, node-exporter images
 #   --no-images            Skip pulling and saving Docker images (faster, configs only)
 #   --no-docker-pkgs       Skip downloading offline Docker Engine packages
@@ -48,10 +48,8 @@ LORAWAN_IMAGES=(
   "chirpstack/chirpstack-rest-api:4"
 )
 
-# Frigate NVR + object detection (bundle: standard, video)
-VIDEO_IMAGES=(
-  "ghcr.io/blakeblackshear/frigate:stable"
-)
+# Frigate NVR lives in the video repository; ss-sens bundles do not ship it.
+VIDEO_IMAGES=()
 
 # Observability stack (added by --with-metrics to any bundle)
 METRICS_IMAGES=(
@@ -144,7 +142,7 @@ log "Creating bundle directory..."
 rm -rf "$BUNDLE_DIR"
 mkdir -p "$IMAGES_DIR" "$PKGS_DIR" \
   "$BUNDLE_DIR/scripts" \
-  "$BUNDLE_DIR/docker/coop" \
+  "$BUNDLE_DIR/docker/ss-sens" \
   "$BUNDLE_DIR/config" \
   "$BUNDLE_DIR/env"
 

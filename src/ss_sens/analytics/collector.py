@@ -11,7 +11,7 @@ def _docker_client():
         return docker.from_env()
     except ImportError as exc:
         raise ImportError(
-            "docker is required for LogCollector. Install with: pip install 'selfsuvis[coop]'"
+            "docker is required for LogCollector. Install with: pip install 'ss-sens[analytics]'"
         ) from exc
 
 

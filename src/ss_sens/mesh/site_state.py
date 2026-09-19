@@ -9,7 +9,7 @@ Thread-safe: all mutations go through an asyncio.Lock.
 
 import asyncio
 from collections import deque
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pydantic import BaseModel, Field
 
@@ -39,7 +39,7 @@ class SensorSummary(BaseModel):
 class SiteState(BaseModel):
     """Snapshot of current LoRaWAN sensors (no cameras)."""
 
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     sensors: list[SensorSummary] = Field(default_factory=list)
     sensor_count: int = 0
     active_motion: bool = False
@@ -74,7 +74,7 @@ class SiteStateAggregator:
             return self._summarize_sensor(reading.dev_eui, queue)
 
     def _evict_old_sensor(self, dev_eui: str) -> None:
-        cutoff = datetime.now(timezone.utc) - timedelta(seconds=self._window_sec)
+        cutoff = datetime.now(UTC) - timedelta(seconds=self._window_sec)
         queue = self._sensors[dev_eui]
         while queue and queue[0][0] < cutoff:
             queue.popleft()

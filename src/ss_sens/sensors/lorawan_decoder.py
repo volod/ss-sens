@@ -12,7 +12,7 @@ for caller-side decoding of custom payloads.
 import base64
 import json
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -135,10 +135,10 @@ def _parse_timestamp(value: Any) -> datetime:
         try:
             dt = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
         except ValueError:
-            return datetime.now(timezone.utc)
+            return datetime.now(UTC)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def _to_float(value: Any) -> float | None:

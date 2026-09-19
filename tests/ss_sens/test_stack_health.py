@@ -17,17 +17,12 @@ class TestContainerHealth:
     def test_containers_healthy(self, docker_client, expected_containers):
         """Verify all containers with health checks are healthy or starting."""
         containers_with_health = []
-        # Containers that may still be starting
-        allow_starting = {"ssv-frigate"}
 
         for container in docker_client.containers.list():
             if container.name in expected_containers:
                 health = container.attrs.get("State", {}).get("Health", {})
                 if health:
                     status = health.get("Status", "unknown")
-                    # Allow "starting" for certain containers
-                    if container.name in allow_starting and status == "starting":
-                        status = "healthy"  # Treat as OK
                     containers_with_health.append({"name": container.name, "status": status})
 
         unhealthy = [
@@ -40,7 +35,7 @@ class TestContainerHealth:
         max_restarts = 5
         # Skip restart count check for containers that may restart on first-run
         # cs-chirpstack retries DB migrations until postgres is ready
-        skip_restart_check = {"ssv-frigate", "ss-sens-chirpstack"}
+        skip_restart_check = {"ss-sens-chirpstack"}
 
         for container in docker_client.containers.list():
             if container.name in expected_containers and container.name not in skip_restart_check:
@@ -68,15 +63,9 @@ class TestServiceEndpoints:
             response = client.get(f"{env_config['chirpstack_rest_url']}/")
             assert response.status_code in range(200, 500)
 
-    @pytest.mark.timeout(15)
-    def test_frigate_accessible(self, env_config):
-        """Test Frigate NVR is accessible."""
-        with httpx.Client(timeout=10) as client:
-            try:
-                response = client.get(f"{env_config['frigate_url']}/api/version")
-                assert response.status_code in [200, 400, 401, 403, 500, 502]
-            except httpx.ConnectError:
-                pytest.skip("Frigate not accessible - may still be starting")
+    def test_frigate_not_in_ss_sens_stack(self) -> None:
+        """Frigate lives in ss-video (`make frigate-up`); ss-sens-up-min does not start it."""
+        pytest.skip("Frigate is not an ss-sens compose service")
 
 
 class TestDatabaseConnectivity:

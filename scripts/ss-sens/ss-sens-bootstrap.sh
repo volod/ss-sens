@@ -41,17 +41,6 @@ fi
 project_load_env_optional
 _DATA_DIR="$(project_data_dir)"
 
-# Copy Frigate config template to .data/coop/frigate/ on first run
-_FRIGATE_LIVE="$_DATA_DIR/coop/frigate/config.yml"
-if [[ ! -f "$_FRIGATE_LIVE" ]]; then
-  project_log "Copying Frigate config template to $_FRIGATE_LIVE"
-  mkdir -p "$(dirname "$_FRIGATE_LIVE")"
-  cp "$PROJECT_ROOT_DIR/config/frigate/config.yml" "$_FRIGATE_LIVE"
-  # Also copy go2rtc homekit config if present
-  _GO2RTC="$PROJECT_ROOT_DIR/config/frigate/go2rtc_homekit.yml"
-  [[ -f "$_GO2RTC" ]] && cp "$_GO2RTC" "$_DATA_DIR/coop/frigate/go2rtc_homekit.yml"
-fi
-
 # Generate Mosquitto TLS certs if missing
 if [[ ! -f "$_DATA_DIR/coop/mosquitto/certs/server.key" ]]; then
   project_log "Generating Mosquitto TLS certs"

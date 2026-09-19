@@ -1,7 +1,7 @@
 """Contract conversion and MQTT publish of LoRaWAN readings."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tests.support.fake_mqtt import FakeMqttClient
 
@@ -13,7 +13,7 @@ from ss_sens.sensors.contracts import (
 )
 from ss_sens.sensors.lorawan_decoder import decode_chirpstack_uplink
 
-INGEST = datetime(2026, 9, 19, 8, 0, 1, 250000, tzinfo=timezone.utc)
+INGEST = datetime(2026, 9, 19, 8, 0, 1, 250000, tzinfo=UTC)
 
 
 def _reading():

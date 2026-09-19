@@ -11,7 +11,7 @@ project_cd_root
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   cat <<'EOF'
-Usage: ./scripts/coop-data-dirs.sh
+Usage: ./scripts/ss-sens/ss-sens-data-dirs.sh
 
 Creates coop bind-mount directories and fixes Mosquitto dir ownership.
 EOF

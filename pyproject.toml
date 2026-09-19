@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ss-sens"
+version = "0.1.0"
+description = "Edge IoT sensor mesh: MQTT, LoRaWAN, rolling site state, and contract events"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "selfsuvis contributors" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "aiomqtt>=2.3",
+    "pydantic>=2.9,<3",
+    "httpx>=0.27",
+    "uvicorn[standard]>=0.27",
+    "ss-common[mqtt,web]",
+]
+
+[project.optional-dependencies]
+analytics = [
+    "pandas>=2.0",
+    "jinja2>=3.1",
+    "rich>=13.0",
+    "docker>=7.0",
+]
+dev = [
+    "pytest>=8,<10",
+    "pytest-asyncio>=0.23",
+    "python-dotenv>=1.0",
+    "ruff>=0.16,<0.17",
+]
+
+[project.scripts]
+ss-sens = "ss_sens.__main__:main"
+ss-sens-analytics = "ss_sens.analytics.cli:main"
+
+[project.urls]
+Repository = "https://github.com/volod/ss-sens"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"ss_sens.analytics" = ["templates/*.j2"]
+"ss_sens" = ["env/*.env"]
+
+[tool.uv.sources]
+ss-common = { git = "https://github.com/volod/ss-common", tag = "v0.1.0" }
+
+[tool.ss-split]
+siblings = []
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ss_sens", "ss_kit", "ss_contracts"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+pythonpath = ["src", "."]
+asyncio_mode = "auto"
+addopts = "-q"
+cache_dir = ".data/cache/pytest"
+markers = [
+    "integration: requires running Docker services",
+    "load: marks tests as load/performance tests (requires locust)",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+]

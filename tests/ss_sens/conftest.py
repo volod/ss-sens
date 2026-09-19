@@ -48,13 +48,12 @@ def expected_containers():
         "ss-sens-chirpstack",
         "ss-sens-cs-gwbridge",
         "ss-sens-cs-rest",
-        "ssv-frigate",
     ]
 
 
 @pytest.fixture(scope="session")
 def container_names():
-    """Named coop service containers from docker-compose.coop.yml."""
+    """Named ss-sens service containers from docker-compose.ss-sens.yml."""
     return {
         "mosquitto": "ss-sens-mosquitto",
         "chirpstack_postgres": "ss-sens-cs-postgres",
@@ -62,6 +61,5 @@ def container_names():
         "chirpstack": "ss-sens-chirpstack",
         "chirpstack_gateway_bridge": "ss-sens-cs-gwbridge",
         "chirpstack_rest": "ss-sens-cs-rest",
-        "frigate": "ssv-frigate",
         "ss_sens": "ss-sens",
     }

@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import UTC
 
 from ss_sens.sensors.lorawan_decoder import decode_chirpstack_uplink
 
@@ -21,7 +21,7 @@ def test_decode_chirpstack_uplink_normalizes_types_and_timestamp() -> None:
     )
 
     assert reading is not None
-    assert reading.received_at.tzinfo is timezone.utc
+    assert reading.received_at.tzinfo is UTC
     assert reading.f_cnt == 42
     assert reading.rssi == -71.0
     assert reading.snr == 8.5

@@ -5,7 +5,7 @@ produces a mesh snapshot on demand for GET /site/mesh.
 """
 
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -30,7 +30,7 @@ class MeshNode(BaseModel):
 class SiteMesh(BaseModel):
     """Point-in-time snapshot of the sensor mesh."""
 
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     nodes: list[MeshNode] = Field(default_factory=list)
     edge_count: int = 0
 

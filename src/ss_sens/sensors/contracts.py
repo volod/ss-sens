@@ -2,7 +2,7 @@
 
 import json
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from ss_contracts.models import SensorEvent as SensorEventMessage
@@ -55,7 +55,7 @@ def sensor_reading_to_event(
     ingest_time: datetime | None = None,
 ) -> SensorEventMessage:
     """Convert a decoded LoRaWAN reading into a contract ``sensor-event``."""
-    ingest = ingest_time or datetime.now(timezone.utc)
+    ingest = ingest_time or datetime.now(UTC)
     return SensorEventMessage(
         event_kind="sensor",
         event_time=reading.received_at,

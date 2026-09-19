@@ -74,22 +74,6 @@ _compose() {
     "$@"
 }
 
-_frigate_wanted() {
-  case ",${COMPOSE_PROFILES:-}," in
-    *,video,*|*,frigate,*) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
-_frigate_compose() {
-  local data_dir
-  data_dir="$(project_data_dir)"
-  UID="$(id -u)" GID="$(id -g)" DATA_DIR="$data_dir" docker compose \
-    -f "$PROJECT_ROOT_DIR/docker/core/docker-compose.yml" \
-    --profile frigate \
-    "$@"
-}
-
 # ── Dispatch ──────────────────────────────────────────────────────────────────
 CMD="${1:-}"
 shift || true
@@ -101,19 +85,12 @@ case "$CMD" in
     _apply_compose_profiles
     log "Starting coop stack..."
     _compose up -d "$@"
-    if _frigate_wanted; then
-      log "Starting Frigate (docker/core profile frigate)..."
-      _frigate_compose up -d frigate
-    fi
     log "Stack running. Use 'ss-sens-ctl status' or 'ss-sens-ctl logs'."
     ;;
 
   stop)
     _apply_compose_profiles
     log "Stopping coop stack..."
-    if _frigate_wanted; then
-      _frigate_compose stop frigate >/dev/null 2>&1 || true
-    fi
     _compose down "$@"
     ;;
 
@@ -121,14 +98,8 @@ case "$CMD" in
     _require_env
     _apply_compose_profiles
     log "Restarting coop stack..."
-    if _frigate_wanted; then
-      _frigate_compose stop frigate >/dev/null 2>&1 || true
-    fi
     _compose down
     _compose up -d "$@"
-    if _frigate_wanted; then
-      _frigate_compose up -d frigate
-    fi
     log "Stack restarted."
     ;;
 

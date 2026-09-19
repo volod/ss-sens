@@ -20,8 +20,7 @@ def _require_aiomqtt() -> Any:
         import aiomqtt
     except ImportError as exc:
         raise ImportError(
-            "aiomqtt is required for ss-sens serve. "
-            "Install it with: pip install 'selfsuvis[ss-sens]'"
+            "aiomqtt is required for ss-sens serve. Install it with: pip install ss-sens"
         ) from exc
     return aiomqtt
 

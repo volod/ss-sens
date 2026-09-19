@@ -1,7 +1,7 @@
 """ss-sens FastAPI /site/sensors and /site/mesh with MQTT disabled."""
 
 import asyncio
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -12,7 +12,7 @@ from ss_sens.sensors.lorawan_decoder import decode_chirpstack_uplink
 
 
 def _reading():
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     reading = decode_chirpstack_uplink(
         {
             "deviceInfo": {"devEui": "70b3d57ed0060001"},
@@ -59,7 +59,7 @@ def test_site_sensors_and_mesh_after_ingest() -> None:
 def test_delayed_uplink_is_summarised_but_not_kept() -> None:
     aggregator = SiteStateAggregator(window_sec=60)
     reading = _reading()
-    reading.received_at = datetime.now(timezone.utc) - timedelta(hours=2)
+    reading.received_at = datetime.now(UTC) - timedelta(hours=2)
     summary = asyncio.run(aggregator.ingest_sensor_reading(reading))
     assert summary.dev_eui == reading.dev_eui
     state = asyncio.run(aggregator.get_state())

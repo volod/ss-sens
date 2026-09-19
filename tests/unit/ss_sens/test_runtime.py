@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from tests.support.fake_mqtt import FakeMqttClient, FakeMqttMessage
 
@@ -11,7 +11,7 @@ from ss_sens.runtime import run_mesh
 
 
 def _uplink() -> bytes:
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    now = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     return (
         b'{"deviceInfo":{"devEui":"70b3d57ed0060001"},'
         + f'"time":"{now}","fCnt":3,'.encode()

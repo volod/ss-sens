@@ -15,8 +15,8 @@
 #                          Examples: /dev/sdb  /dev/mmcblk0  /dev/nvme0n1
 #   --bundle BUNDLE        Service bundle to activate (default: standard):
 #                            min      -- MQTT hub + LoRaWAN (sensors, mechanical control)
-#                            standard -- min + Frigate NVR video surveillance
-#                            video    -- MQTT hub + Frigate NVR (no LoRaWAN)
+#                            standard -- same as min (Frigate stays in ss-video)
+#                            video    -- MQTT hub only (no LoRaWAN/ChirpStack)
 #   --hw-profile PROFILE   Hardware resource profile for Docker limits (default: min):
 #                            min  -- 4-core CPU,  8 GB RAM  (thin clients, USFF 1L PCs)
 #                            mid  -- 4-8-core,   16 GB RAM
@@ -504,7 +504,7 @@ log ""
 log "  Endpoints:"
 log "    ChirpStack UI      http://localhost:8080"
 log "    ChirpStack REST    http://localhost:8090"
-log "    Frigate NVR        https://localhost:8971"
+log "    ss-sens HTTP       http://localhost:8081"
 log "    MQTT plain         localhost:1883"
 log "    MQTT TLS           localhost:8883"
 log "    LoRaWAN UDP        localhost:1700"
