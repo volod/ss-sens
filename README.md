@@ -3,7 +3,7 @@
 Edge IoT sensor mesh: MQTT subscriber, LoRaWAN decoding, rolling sensor state, GPS-proximity
 mesh fusion, analytics CLI, and a small FastAPI service that publishes contract sensor events.
 
-This repository is staged from the video monorepo until `publish-ss-sens`. It pins
+This is [`volod/ss-sens`](https://github.com/volod/ss-sens). It pins
 [`volod/ss-common`](https://github.com/volod/ss-common) tag `v0.1.0`. Camera ingest, combined
 site snapshot, and threat aggregation stay in the video / fusion services; they consume
 ss-sens over MQTT.

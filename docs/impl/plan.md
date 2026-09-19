@@ -5,9 +5,8 @@ Forward-only: this file describes work that remains. Available behavior belongs 
 [specification](../design/spec.md). Task fields, statuses, and ordering are defined in the
 [planning workflow](../guide/planning-workflow.md).
 
-While ss-sens is staged, repository publish lives in the staging repository's
-plan. The Pi edge soak lives here and records numbers against a published image
-from the extracted repository. See [Staged work](../design/spec.md#staged-work).
+The Pi edge soak lives here and records numbers against a tagged image from this
+repository. See [Related repositories](../design/spec.md#related-repositories).
 
 Path reading: `src/ss_sens/` is this package; routes placed under a v1 devices API attach to
 `ss-sens serve`; migrations use this repository's runner; conversions that used to live in
@@ -541,21 +540,20 @@ Only a real Pi shows whether the edge profile fits its resource budget.
 
 - Serves: `sensor-mesh` -- [Sensor mesh](../design/spec.md#sensor-mesh)
 - Agent status: BLOCKED BY HUMAN
-- Dependencies: none. Cross-lane note: acceptance uses a published image from the
-  extracted repository, not the staged tree.
+- Dependencies: none. Cross-lane note: acceptance uses a tagged image from this
+  repository, not an untagged local build.
 - User-visible outcome: measured CPU, memory, and restart numbers for the ss-sens `edge` profile on
   a Raspberry Pi over 24 hours set the documented minimum hardware.
-- Human step: after the staging repository publishes volod/ss-sens, provide a Raspberry Pi 4 or 5
-  on the LAN with Docker, start the `edge` profile from that published image, and leave it running
-  for 24 hours.
+- Human step: provide a Raspberry Pi 4 or 5 on the LAN with Docker, start the `edge` profile from a
+  tagged image of this repository, and leave it running for 24 hours.
 - Scope boundary: the agent supplies a soak script that replays fixture uplinks at a configured
   rate and samples `docker stats` and restart counts; field hardware and radio are out of scope.
-  Out of scope -- running the soak against a locally tagged staging image as the acceptance run.
+  Out of scope -- running the soak against an untagged local image as the acceptance run.
 - Data and artifact paths: soak output under `$DATA_DIR/ss-sens/soak/<run-id>/`.
-- Execution path: from the extracted repository, pull or build the published image, set
-  `SS_SENS_IMAGE`, `make ss-sens-up-edge` on the Pi, then the soak script.
+- Execution path: pull or build a tagged image, set `SS_SENS_IMAGE`, `make ss-sens-up-edge` on
+  the Pi, then the soak script.
 - Acceptance gates: 24 hours without service restarts; memory growth bounded; numbers recorded
-  against a published image. Valid negative result: the measured numbers raise the minimum
+  against a tagged image. Valid negative result: the measured numbers raise the minimum
   hardware (8 GB Pi 5 or nettop).
 - Documentation target: [deployment.md](current/deployment.md).
 

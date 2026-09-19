@@ -16,12 +16,9 @@ they consume this service over MQTT.
 
 ### 1. Enter this repository
 
-While staged, this tree is `projects/ss-sens/` in the video monorepo. After
-publish it is its own clone:
-
 ```bash
-cd projects/ss-sens   # staged
-# or: git clone <ss-sens-url> && cd ss-sens
+git clone https://github.com/volod/ss-sens.git
+cd ss-sens
 make bootstrap        # uv sync --locked --all-extras
 ```
 
@@ -123,12 +120,13 @@ Expected containers on the min / lorawan profile: `ss-sens`, `ss-sens-mosquitto`
 
 ## Integrating with the video API
 
-While staged, start both stacks from the video repository root:
+Start this stack here, and the video API from its own repository:
 
 ```bash
+make ss-sens-up-min
+# in volod/selfsuvis (later ss-video):
 make up
 make frigate-up
-make -C projects/ss-sens ss-sens-up-min
 ```
 
 Video `.env` MQTT settings should match this broker (`COOP_MQTT_HOST=mosquitto`
